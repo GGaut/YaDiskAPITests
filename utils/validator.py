@@ -1,0 +1,14 @@
+from typing import Any, Type, TypeVar
+
+from pydantic import BaseModel
+
+T = TypeVar("T", bound=BaseModel)
+
+
+def response_validation(data: dict[str, Any], model: Type[T]) -> T:
+    try:
+        v_data = model.model_validate(data)
+        v_data.model_dump()
+        return v_data
+    except Exception as e:
+        raise ValueError(f"Validation error: {e}")

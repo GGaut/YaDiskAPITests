@@ -2,6 +2,8 @@
 
 ![Auth](./imgs/GETAuth.png)
 
+================================
+
 # GET запрос без авторизации:
 
 ![NoAut](./imgs/GETNoAuth.png)
