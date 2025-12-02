@@ -14,13 +14,18 @@ def test_auth_with_valid_token(client):
     )
     data = response.json()
     val_data = response_validation(data, DiskInfoResponse)
-    assert val_data.user is not None, "Response body doesn't contain 'user' field"
-    assert val_data.user.login is not None, (
+
+    # Проверяем, что поля существуют и не None
+    assert "user" in val_data and val_data["user"] is not None, (
+        "Response body doesn't contain 'user' field"
+    )
+    assert "login" in val_data["user"] and val_data["user"]["login"] is not None, (
         "Response body doesn't contain 'login' field"
     )
-    assert val_data.user.display_name is not None, (
-        "Response body doesn't contain 'display_name' field"
-    )
+    assert (
+        "display_name" in val_data["user"]
+        and val_data["user"]["display_name"] is not None
+    ), "Response body doesn't contain 'display_name' field"
 
 
 @allure.title("Авторизация без токена")
@@ -33,12 +38,14 @@ def test_auth_without_token(unauthorized_client):
     )
     data = response.json()
     val_data = response_validation(data, DI_ErrorResponse)
-    assert val_data.error is not None, (
+
+    # Проверяем, что поля существуют и не None
+    assert "error" in val_data and val_data["error"] is not None, (
         "Error response body doesn't contain 'error' field"
     )
-    assert val_data.description is not None, (
+    assert "description" in val_data and val_data["description"] is not None, (
         "Error response body doesn't contain 'description' field"
     )
-    assert val_data.message is not None, (
+    assert "message" in val_data and val_data["message"] is not None, (
         "Error response body doesn't contain 'message' field"
     )
