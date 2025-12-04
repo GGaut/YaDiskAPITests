@@ -1,4 +1,3 @@
-import allure
 import requests
 
 from config.configs import API_BASE_URL, OAUTH_TOKEN
@@ -12,6 +11,12 @@ class APIClient:
         if self.token:
             self.session.headers.update({"Authorization": f"OAuth {self.token}"})
 
+    def set_auth(self):
+        self.session.headers.update({"Authorization": f"OAuth {self.token}"})
+
+    def set_unauth(self):
+        self.session.headers.pop("Authorization", None)
+
     def close(self):
         self.session.close()
 
@@ -21,22 +26,18 @@ class APIClient:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
-    @allure.step("Отправить GET запрос")
-    def get(self, endpoint=""):
+    def get(self, endpoint="", params=None, data=None):
         url = f"{self.base_url}/{endpoint}".rstrip("/")
-        return self.session.get(url)
+        return self.session.get(url, params=params, data=data)
 
-    @allure.step("Отправить POST запрос")
-    def post(self, endpoint="", data=None):
+    def post(self, endpoint="", params=None, data=None):
         url = f"{self.base_url}/{endpoint}".rstrip("/")
-        return self.session.post(url, data=data)
+        return self.session.post(url, params=params, data=data)
 
-    @allure.step("Отправить PUT запрос")
-    def put(self, endpoint="", data=None):
+    def put(self, endpoint="", params=None, data=None):
         url = f"{self.base_url}/{endpoint}".rstrip("/")
-        return self.session.put(url, data=data)
+        return self.session.put(url, params=params, data=data)
 
-    @allure.step("Отправить DELETE запрос")
-    def delete(self, endpoint="", data=None):
+    def delete(self, endpoint="", params=None, data=None):
         url = f"{self.base_url}/{endpoint}".rstrip("/")
-        return self.session.delete(url, data=data)
+        return self.session.delete(url, params=params, data=data)

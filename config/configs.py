@@ -1,9 +1,11 @@
 import os
+
 from dotenv import load_dotenv
 
 load_dotenv()
 
 
 API_BASE_URL = os.getenv("BASE_URL")
-OAUTH_TOKEN = os.getenv("TOKEN")
-
+RESOURCE_ENDPOINT = os.getenv("RESOURCE_ENDPOINT")
+TRASH_ENDPOINT = os.getenv("TRASH_ENDPOINT")
+OAUTH_TOKEN = os.getenv("OAUTH_TOKEN")
