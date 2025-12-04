@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 # User AUTH/NOAUTH
@@ -28,7 +28,7 @@ class EmbeddedTrash(BaseModel):
 
 
 class TrashResponse(BaseModel):
-    _embedded: EmbeddedTrash
+    embedded: EmbeddedTrash = Field(alias="_embedded")
 
 
 # Folder response

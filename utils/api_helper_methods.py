@@ -47,7 +47,7 @@ class FolderMethods:
 
     @allure.step("Восстановить папку")
     def restore_folder(self, path):
-        trash_items = self.get_trash_items(10)["_embedded"]["items"]
+        trash_items = self.get_trash_items(10)["embedded"]["items"]
         for item in trash_items:
             if item["name"] == path:
                 path = item["path"]
