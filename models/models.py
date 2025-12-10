@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field, HttpUrl
 
@@ -17,7 +17,13 @@ class TrashResponse(BaseModel):
     embedded: EmbeddedTrash = Field(alias="_embedded")
 
 
-# File opreation response
+# File operation response
+class FileError(BaseModel):
+    error: str
+    description: str
+    message: str
+
+
 class FileResponse(BaseModel):
     method: str
     href: HttpUrl
@@ -25,7 +31,39 @@ class FileResponse(BaseModel):
     operation_id: Optional[str] = None
 
 
-class FileError(BaseModel):
-    error: str
-    description: str
-    message: str
+# List of files response
+class Size(BaseModel):
+    url: HttpUrl
+    name: str
+
+
+class CommentIds(BaseModel):
+    public_resource: str
+    private_resource: str
+
+
+class Item(BaseModel):
+    path: str
+    type: str
+    name: str
+    created: str
+    modified: str
+    size: int
+    mime_type: str
+    md5: str
+    sha256: str
+    preview: Optional[HttpUrl] = None
+    media_type: str
+    sizes: Optional[list[Size]] = None
+    resource_id: str
+    revision: int
+    comment_ids: CommentIds
+    exif: dict[str, Any]
+    antivirus_status: str
+    file: HttpUrl
+
+
+class FilesResponse(BaseModel):
+    limit: int
+    items: list[Item]
+    offset: int

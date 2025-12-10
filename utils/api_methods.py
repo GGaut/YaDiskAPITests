@@ -59,3 +59,9 @@ class FilesMethods:
     def download_file(self, href):
         response = self.api_client.get(href)
         return response
+
+    @allure.step("Получить список файлов")
+    def get_files_list(self, folder):
+        url = f"{self.file_endpoint}files"
+        params = {"path": f"/{folder}"}
+        return self.api_client.get(url, params=params)

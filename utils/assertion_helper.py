@@ -10,6 +10,7 @@ def assert_success_response(data, model):
     assert "templated" in val_data and val_data["templated"] is not None, (
         "Missing 'templated' field"
     )
+    return val_data
 
 
 def assert_error_response(data, model):
@@ -23,3 +24,4 @@ def assert_error_response(data, model):
     assert "message" in val_data and val_data["message"] is not None, (
         "Missing 'message' field"
     )
+    return val_data

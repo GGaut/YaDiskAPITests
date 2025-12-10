@@ -19,14 +19,14 @@ class Api_Client:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
-    def get(self, endpoint, params=None, data=None):
-        return self.session.get(endpoint, params=params, data=data)
+    def get(self, url, params=None, data=None):
+        return self.session.get(url, params=params, data=data)
 
-    def post(self, endpoint, params=None, data=None, files=None):
-        return self.session.post(endpoint, params=params, data=data, files=files)
+    def post(self, url, params=None, data=None, files=None):
+        return self.session.post(url, params=params, data=data, files=files)
 
-    def put(self, endpoint, params=None, data=None, files=None):
-        return self.session.put(endpoint, params=params, data=data, files=files)
+    def put(self, url, params=None, data=None, files=None):
+        return self.session.put(url, params=params, data=data, files=files)
 
-    def delete(self, endpoint, params=None, data=None, files=None):
-        return self.session.delete(endpoint, params=params, data=data, files=files)
+    def delete(self, url, params=None, data=None, files=None):
+        return self.session.delete(url, params=params, data=data, files=files)
