@@ -1,6 +1,11 @@
 import allure
 
 from models.models import FileError, FileResponse, FilesResponse
+from schemas.schemas import (
+    FILE_ERROR_SCHEMA,
+    FILE_RESPONSE_SCHEMA,
+    FILES_RESPONSE_SCHEMA,
+)
 from utils.assertion_helper import assert_error_response as a_error
 from utils.assertion_helper import assert_success_response as a_succes
 from utils.validator import response_validation
@@ -18,7 +23,7 @@ def test_upload_n_copy(folder_manager, create_test_file, file_methods):
     assert resp_href.status_code == 200, (
         f"Request returns {resp_href.status_code} code, expected 200"
     )
-    href = a_succes(resp_href, FileResponse)["href"]
+    href = a_succes(resp_href, FileResponse, FILE_RESPONSE_SCHEMA).href
 
     resp_upload = fim.upload_file(href, file)
     assert resp_upload.status_code == 201, (
@@ -29,13 +34,13 @@ def test_upload_n_copy(folder_manager, create_test_file, file_methods):
     assert resp_copy.status_code == 201, (
         f"Request returns {resp_copy.status_code} code, expected 201"
     )
-    a_succes(resp_copy, FileResponse)
+    a_succes(resp_copy, FileResponse, FILE_RESPONSE_SCHEMA)
 
     resp_copy_fail = fim.copy_file("input_data", "output_data", file)
     assert resp_copy_fail.status_code == 409, (
         f"Request returns {resp_copy_fail.status_code} code, expected 409"
     )
-    a_error(resp_copy_fail, FileError)
+    a_error(resp_copy_fail, FileError, FILE_ERROR_SCHEMA)
 
 
 @allure.feature("Операции с файлами")
@@ -50,7 +55,7 @@ def test_download_file(pre_upload_file, file_methods, folder_manager):
     assert resp_href.status_code == 200, (
         f"Request returns {resp_href.status_code} code, expected 200"
     )
-    href = a_succes(resp_href, FileResponse)["href"]
+    href = a_succes(resp_href, FileResponse, FILE_RESPONSE_SCHEMA).href
     resp = fim.download_file(href)
     assert resp.status_code == 200, (
         f"Request returns {resp.status_code} code, expected 200"
@@ -71,11 +76,7 @@ def test_get_file_list(pre_upload_file, file_methods, folder_manager):
     assert resp.status_code == 200, (
         f"Request returns {resp.status_code} code, expected 200"
     )
-    resp = response_validation(resp, FilesResponse)
-    files = [
-        {"name": item["name"]}
-        for item in resp["items"]
-        if f"/{folder}/" in item["path"]
-    ]
+    resp = response_validation(resp, FilesResponse, FILES_RESPONSE_SCHEMA)
+    files = [{"name": item.name} for item in resp.items if f"/{folder}/" in item.path]
     assert {"name": f1} in files, f"Missing value {f1} in name filed"
     assert {"name": f2} in files, f"Missing value {f2} in name filed"

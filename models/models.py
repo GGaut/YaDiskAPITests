@@ -1,48 +1,44 @@
+from dataclasses import dataclass
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field, HttpUrl
+from dataclasses_json import dataclass_json
 
 
-# Trash response
-class TrashItem(BaseModel):
-    path: str
-    name: str
+@dataclass_json
+@dataclass
+class FileResponse:
+    method: str
+    href: str
+    templated: bool
+    operation_id: Optional[str] = None
 
 
-class EmbeddedTrash(BaseModel):
-    items: list[TrashItem]
-
-
-class TrashResponse(BaseModel):
-    embedded: EmbeddedTrash = Field(alias="_embedded")
-
-
-# File operation response
-class FileError(BaseModel):
+@dataclass_json
+@dataclass
+class FileError:
     error: str
     description: str
     message: str
 
 
-class FileResponse(BaseModel):
-    method: str
-    href: HttpUrl
-    templated: bool
-    operation_id: Optional[str] = None
-
-
 # List of files response
-class Size(BaseModel):
-    url: HttpUrl
+@dataclass_json
+@dataclass
+class Size:
+    url: str
     name: str
 
 
-class CommentIds(BaseModel):
+@dataclass_json
+@dataclass
+class CommentIds:
     public_resource: str
     private_resource: str
 
 
-class Item(BaseModel):
+@dataclass_json
+@dataclass
+class Item:
     path: str
     type: str
     name: str
@@ -52,18 +48,20 @@ class Item(BaseModel):
     mime_type: str
     md5: str
     sha256: str
-    preview: Optional[HttpUrl] = None
     media_type: str
-    sizes: Optional[list[Size]] = None
     resource_id: str
     revision: int
     comment_ids: CommentIds
     exif: dict[str, Any]
     antivirus_status: str
-    file: HttpUrl
+    file: str
+    preview: Optional[str] = None
+    sizes: Optional[list[Size]] = None
 
 
-class FilesResponse(BaseModel):
+@dataclass_json
+@dataclass
+class FilesResponse:
     limit: int
     items: list[Item]
     offset: int
