@@ -1,34 +1,64 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'python:3.11-slim'
+        }
+    }
 
     environment {
-        OAUTH_TOKEN = credentials('yandex-oauth-token')
+        BASE_URL = 'https://cloud-api.yandex.net/v1/disk'
+        RESOURCE_ENDPOINT = 'resources'
+        TRASH_ENDPOINT = 'trash/resources'
+        OAUTH_TOKEN = credentials('Ya_disk_token')
     }
 
     stages {
-        stage('Test') {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Install uv') {
             steps {
                 sh '''
-                    # Install uv
-                    curl -LsSf https://astral.sh/uv/install.sh | sh -s -- -y
-                    export PATH="$HOME/.cargo/bin:$PATH"
+                    curl -LsSf https://astral.sh/uv/install.sh | sh
+                    export PATH="$HOME/.local/bin:$PATH"
+                    uv --version
+                '''
+            }
+        }
 
-                    # Create .env file with hardcoded values
-                    cat > .env << EOF
-                    BASE_URL=https://cloud-api.yandex.net/v1/disk
-                    RESOURCE_ENDPOINT=resources
-                    TRASH_ENDPOINT=trash/resources
-                    OAUTH_TOKEN=$OAUTH_TOKEN
-                    EOF
+        stage('Create .env file') {
+            steps {
+                sh '''
+                    export PATH="$HOME/.local/bin:$PATH"
+                    echo "BASE_URL=$BASE_URL" > .env
+                    echo "OAUTH_TOKEN=$OAUTH_TOKEN" >> .env
+                    echo "RESOURCE_ENDPOINT=$RESOURCE_ENDPOINT" >> .env
+                    echo "TRASH_ENDPOINT=$TRASH_ENDPOINT" >> .env
+                '''
+            }
+        }
 
-                    # Run tests
+        stage('Install dependencies') {
+            steps {
+                sh '''
+                    export PATH="$HOME/.local/bin:$PATH"
                     uv sync
-                    uv run pytest tests/ -v
+                '''
+            }
+        }
 
-                    # Cleanup
-                    rm -f .env
+        stage('Run tests') {
+            steps {
+                sh '''
+                    export PATH="$HOME/.local/bin:$PATH"
+                    uv run pytest
                 '''
             }
         }
     }
 }
+
+
