@@ -8,13 +8,6 @@ pipeline {
         OAUTH_TOKEN = credentials('Ya_disk_token')
     }
 
-    stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-
         stage('Install Python and uv') {
             steps {
                 sh '''
