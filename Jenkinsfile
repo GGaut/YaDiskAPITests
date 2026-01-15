@@ -1,9 +1,5 @@
 pipeline {
-    agent {
-        docker {
-            image 'python:3.11-slim'
-        }
-    }
+    agent any
 
     environment {
         BASE_URL = 'https://cloud-api.yandex.net/v1/disk'
@@ -19,9 +15,10 @@ pipeline {
             }
         }
 
-        stage('Install uv') {
+        stage('Install Python and uv') {
             steps {
                 sh '''
+                    apt-get update && apt-get install -y python3 python3-pip curl
                     curl -LsSf https://astral.sh/uv/install.sh | sh
                     export PATH="$HOME/.local/bin:$PATH"
                     uv --version
@@ -60,5 +57,4 @@ pipeline {
         }
     }
 }
-
 
