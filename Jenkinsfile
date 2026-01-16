@@ -13,7 +13,8 @@ pipeline {
             steps {
                 sh '''
                     apt-get update && apt-get install -y python3 python3-pip curl
-                    curl -LsSf https://astral.sh/uv/install.sh | sh -s -- --install-dir /usr/local/bin
+                    curl -LsSf https://astral.sh/uv/install.sh | sh
+                    export PATH="$HOME/.local/bin:$PATH"
                     uv --version
                 '''
             }
@@ -22,6 +23,7 @@ pipeline {
         stage('Create .env file') {
             steps {
                 sh '''
+                    export PATH="$HOME/.local/bin:$PATH"
                     echo "BASE_URL=$BASE_URL" > .env
                     echo "OAUTH_TOKEN=$OAUTH_TOKEN" >> .env
                     echo "RESOURCE_ENDPOINT=$RESOURCE_ENDPOINT" >> .env
@@ -33,6 +35,7 @@ pipeline {
         stage('Install dependencies') {
             steps {
                 sh '''
+                    export PATH="$HOME/.local/bin:$PATH"
                     uv sync
                 '''
             }
@@ -41,6 +44,7 @@ pipeline {
         stage('Run tests with allure') {
             steps {
                 sh '''
+                    export PATH="$HOME/.local/bin:$PATH"
                     uv run pytest --alluredir=allure_results-${BUILD_NUMBER}
                 '''
             }
@@ -49,6 +53,7 @@ pipeline {
         stage('Generate and archibe report') {
             steps {
                 sh '''
+                    export PATH="$HOME/.local/bin:$PATH"
                     mkdir -p allure_history
                     allure generate --clean allure_results-${BUILD_NUMBER} -o allure_history/${BUILD_NUMBER}
                 '''
