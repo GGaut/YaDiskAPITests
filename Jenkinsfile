@@ -60,7 +60,9 @@ pipeline {
                    jdk: '',
                    reportBuildPolicy: 'ALWAYS',
                    results: [[path: 'allure_results']]
+        }
 
+        always {
             emailext (
                 subject: "Результаты автотестов для ${env.JOB_NAME} - Сборка #${env.BUILD_NUMBER}",
                 body: """
@@ -77,7 +79,5 @@ pipeline {
                 compressLog: true
                 )
         }
-
-
     }
 }
