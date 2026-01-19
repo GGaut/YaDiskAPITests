@@ -61,9 +61,22 @@ pipeline {
                    reportBuildPolicy: 'ALWAYS',
                    results: [[path: 'allure_results']]
 
-            mail to: 'sokol_night@mail.ru',
-                 subject: "Автотесты ${env.JOB_NAME} - #${env.BUILD_NUMBER}",
-                 body: "Статус: ${currentBuild.result}\nСсылка: ${env.BUILD_URL}allure"
+            emailext (
+                subject: "Результаты автотестов для ${env.JOB_NAME} - Сборка #${env.BUILD_NUMBER}",
+                body: """
+                    <!DOCTYPE html>
+                    <html>
+                    <head><meta charset="UTF-8"></head>
+                    <body>
+                        <p>Автоматический прогон тестов для проекта <b>${env.JOB_NAME}</b> (Сборка #${env.BUILD_NUMBER}) завершился со статусом <b style="color:green;">${currentBuild.result}</b>.</p>
+                        <p><a href="${env.BUILD_URL}allure">Просмотреть отчет Allure</a></p>
+                        <p>Архив с отчетом прикреплен к этому письму.</p>
+                    </body>
+                    </html>
+                """,
+                to: "sokol_night@mail.ru",
+                mimeType: "text/html"
+            )
         }
     }
 }
