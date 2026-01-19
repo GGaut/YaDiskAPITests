@@ -43,7 +43,7 @@ pipeline {
         stage('Run tests') {
             steps {
                 sh '''
-                    export PATH="$HOME/.local/bin:$PWD/allure-2.13.8/bin:$PATH"
+                    export PATH="$HOME/.local/bin:$PATH"
                     uv run pytest --alluredir=allure_results
                 '''
             }
