@@ -79,8 +79,8 @@ pipeline {
                         </html>
                     """,
                     to: "sokol_night@mail.ru",
-                    attachmentsPattern: 'builds/${BUILD_NUMBER}/archive/allure-report.zip',
-                    compressLog: true
+                    /// attachmentsPattern: 'builds/${BUILD_NUMBER}/archive/allure-report.zip',
+                    /// compressLog: true
                 )
             }
         }
