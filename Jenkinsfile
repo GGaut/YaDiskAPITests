@@ -61,22 +61,9 @@ pipeline {
                    reportBuildPolicy: 'ALWAYS',
                    results: [[path: 'allure_results']]
 
-
-            emailext (
-                subject: "Результаты автотестов",
-                body: """
-                    <!DOCTYPE html>
-                    <html>
-                    <head><meta charset="UTF-8"></head>
-                    <body>
-                        <p>Архив с отчетом прикреплен к этому письму.</p>
-                    </body>
-                    </html>
-                """,
-                to: "sokol_night@mail.ru",
-                /// attachmentsPattern: 'builds/${BUILD_NUMBER}/archive/allure-report.zip',
-                /// compressLog: true
-            )
+            mail to: 'sokol_night@mail.ru',
+                 subject: "Автотесты ${env.JOB_NAME} - #${env.BUILD_NUMBER}",
+                 body: "Статус: ${currentBuild.result}\nСсылка: ${env.BUILD_URL}allure"
         }
     }
 }
