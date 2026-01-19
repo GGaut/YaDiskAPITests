@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    triggers {
+        cron('20 13 * * *')
+    }
+
     environment {
         BASE_URL = 'https://cloud-api.yandex.net/v1/disk'
         RESOURCE_ENDPOINT = 'resources'
@@ -56,6 +60,24 @@ pipeline {
                    jdk: '',
                    reportBuildPolicy: 'ALWAYS',
                    results: [[path: 'allure_results']]
+
+            emailext (
+                subject: "Результаты автотестов для ${env.JOB_NAME} - Сборка #${env.BUILD_NUMBER}",
+                body: """
+                    <!DOCTYPE html>
+                    <html>
+                    <head><meta charset="UTF-8"></head>
+                    <body>
+                        <p>Автоматический прогон тестов для проекта <b>${env.JOB_NAME}</b> (Сборка #${env.BUILD_NUMBER}) завершился со статусом <b style="color:red;">${currentBuild.result}</b>.</p>
+                    </body>
+                    </html>
+                """,
+                to: "sokol_night@mail.ru",
+                attachmentsPattern: 'builds/${BUILD_NUMBER}/archive/allure-report.zip',
+                compressLog: true
+                )
         }
+
+
     }
 }

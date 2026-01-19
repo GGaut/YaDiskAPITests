@@ -36,7 +36,7 @@ class Test_YaDisk_Auth:
         client.set_unauth()
         response = client.get()
 
-        assert response.status_code == 4012, (
+        assert response.status_code == 401, (
             f"Request returns {response.status_code} code, expected 401"
         )
         client.set_auth()
