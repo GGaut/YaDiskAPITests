@@ -54,6 +54,7 @@ pipeline {
         always {
             allure includeProperties: false,
                    jdk: '',
+                   reportBuildPolicy: 'ALWAYS',
                    results: [[path: 'allure_results']]
         }
     }
