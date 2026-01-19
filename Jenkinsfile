@@ -75,7 +75,7 @@ pipeline {
                     </html>
                 """,
                 to: "sokol_night@mail.ru",
-                mimeType: "text/html"
+                mimeType: "text/html",
                 attachmentsPattern: 'allure-report.zip'
             )
         }
