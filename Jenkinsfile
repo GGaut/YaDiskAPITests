@@ -60,9 +60,9 @@ pipeline {
                    jdk: '',
                    reportBuildPolicy: 'ALWAYS',
                    results: [[path: 'allure_results']]
-        }
 
-        always {
+            archiveArtifacts artifacts: 'allure-report.zip', fingerprint: true
+
             emailext (
                 subject: "Результаты автотестов для ${env.JOB_NAME} - Сборка #${env.BUILD_NUMBER}",
                 body: """
@@ -75,9 +75,9 @@ pipeline {
                     </html>
                 """,
                 to: "sokol_night@mail.ru",
-                attachmentsPattern: 'builds/${BUILD_NUMBER}/archive/allure-report.zip',
+                attachmentsPattern: 'allure-report.zip',
                 compressLog: true
-                )
+            )
         }
     }
 }
