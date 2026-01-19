@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    triggers {
-        cron('55 13 * * *')
-    }
-
     environment {
         BASE_URL = 'https://cloud-api.yandex.net/v1/disk'
         RESOURCE_ENDPOINT = 'resources'
