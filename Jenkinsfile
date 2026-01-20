@@ -1,108 +1,125 @@
-node {
-    env.BASE_URL = 'https://cloud-api.yandex.net/v1/disk'
-    env.RESOURCE_ENDPOINT = 'resources'
-    env.TRASH_ENDPOINT = 'trash/resources'
-    env.OAUTH_TOKEN = credentials('Ya_disk_token')
-    env.ALLURE_HOME = tool 'allure'
+pipeline {
+    agent any
 
-    stage('Install Python and uv') {
-        sh '''
-            apt-get update && apt-get install -y python3 curl
-            curl -LsSf https://astral.sh/uv/install.sh | sh
-            export PATH="$HOME/.local/bin:$PATH"
-            uv --version
-        '''
+    environment {
+        BASE_URL = 'https://cloud-api.yandex.net/v1/disk'
+        RESOURCE_ENDPOINT = 'resources'
+        TRASH_ENDPOINT = 'trash/resources'
+        OAUTH_TOKEN = credentials('Ya_disk_token')
+        ALLURE_HOME = tool 'allure'
     }
 
-    stage('Create .env file') {
-        sh '''
-            export PATH="$HOME/.local/bin:$PATH"
-            echo "BASE_URL=$BASE_URL" > .env
-            echo "OAUTH_TOKEN=$OAUTH_TOKEN" >> .env
-            echo "RESOURCE_ENDPOINT=$RESOURCE_ENDPOINT" >> .env
-            echo "TRASH_ENDPOINT=$TRASH_ENDPOINT" >> .env
-        '''
+    stages {
+        stage('Install Python and uv') {
+            steps {
+                sh '''
+                    apt-get update && apt-get install -y python3 curl
+                    curl -LsSf https://astral.sh/uv/install.sh | sh
+                    export PATH="$HOME/.local/bin:$PATH"
+                    uv --version
+                '''
+            }
+        }
+        stage('Create .env file') {
+            steps {
+                sh '''
+                    export PATH="$HOME/.local/bin:$PATH"
+                    echo "BASE_URL=$BASE_URL" > .env
+                    echo "OAUTH_TOKEN=$OAUTH_TOKEN" >> .env
+                    echo "RESOURCE_ENDPOINT=$RESOURCE_ENDPOINT" >> .env
+                    echo "TRASH_ENDPOINT=$TRASH_ENDPOINT" >> .env
+                '''
+            }
+        }
+
+        stage('Install dependencies') {
+            steps {
+                sh '''
+                    export PATH="$HOME/.local/bin:$PATH"
+                    uv sync
+                '''
+            }
+        }
+
+        stage('Run tests') {
+            steps {
+                sh '''
+                    rm -rf allure_results
+                    mkdir allure_results
+
+                    export PATH="$HOME/.local/bin:$PATH"
+                    uv run pytest --alluredir=allure_results
+                '''
+            }
+        }
     }
 
-    stage('Install dependencies') {
-        sh '''
-            export PATH="$HOME/.local/bin:$PATH"
-            uv sync
-        '''
-    }
+    post {
+        always {
 
-    stage('Run tests') {
-        sh '''
-            rm -rf allure_results
-            mkdir allure_results
+            allure includeProperties: false,
+                jdk: '',
+                reportBuildPolicy: 'ALWAYS',
+                results: [[path: 'allure_results']]
 
-            export PATH="$HOME/.local/bin:$PATH"
-            uv run pytest --alluredir=allure_results --junitxml=junit.xml || true
-        '''
-    }
+            sh '''
+                export PATH="$ALLURE_HOME/bin:$PATH"
+                allure generate allure_results --clean -o allure-report
+                cp /var/jenkins_home/jobs/$JOB_NAME/builds/$BUILD_NUMBER/archive/allure-report.zip \
+                . || echo "ZIP не найден"
+            '''
 
-    stage('Publish Allure') {
-        allure includeProperties: false,
-               jdk: '',
-               reportBuildPolicy: 'ALWAYS',
-               results: [[path: 'allure_results']]
+            script {
+                def summary = readJSON file: "allure-report/widgets/summary.json"
 
-        sh '''
-            export PATH="$ALLURE_HOME/bin:$PATH"
-            cp /var/jenkins_home/jobs/$JOB_NAME/builds/$BUILD_NUMBER/archive/allure-report.zip \
-            . || echo "ZIP не найден"
-        '''
-    }
+                env.ALLURE_TESTS_TOTAL  = summary.statistic.total.toString()
+                env.ALLURE_TESTS_PASSED = summary.statistic.passed.toString()
+                env.ALLURE_TESTS_FAILED = summary.statistic.failed.toString()
+                env.ALLURE_TESTS_SKIPPED = summary.statistic.skipped.toString()
 
-    stage('Collect JUnit results') {
-        junit 'junit.xml'
-        def xml = readFile 'junit.xml'
-        def root = new XmlSlurper().parseText(xml)
-        def suite = root.name() == 'testsuite' ? root : root.testsuite[0]
+                def failedTests = []
 
-        total = (suite.@tests as int)
-        failures = (suite.@failures as int)
-        errors = (suite.@errors as int)
-        skipped = (suite.@skipped as int)
-        failed = failures + errors
-        passed = total - failed - skipped
+                def testCaseFiles = findFiles(glob: 'allure-report/data/test-cases/*.json')
 
-        failedTests = suite.testcase.findAll { tc ->
-        tc.failure || tc.error
-        }.collect { tc ->
-        def cls = tc.@classname.toString()
-        def name = tc.@name.toString()
-        "<li>FAILED: ${cls}.${name}</li>"
-        }.join("\n")
-    }
+                testCaseFiles.each { file ->
+                    def test = readJSON file: file.path
+                    if (test.status == "failed" || test.status == "broken") {
+                        failedTests << (test.fullName ?: test.name)
+                    }
+                }
 
-    stage('Send email') {
-        emailext(
-            subject: "Результаты автотестов для ${env.JOB_NAME} - Сборка #${env.BUILD_NUMBER}",
-            body: """
-                <!DOCTYPE html>
-                <html>
-                <head><meta charset="UTF-8"></head>
-                <body>
-                    <h3>Результаты тестирования</h3>
+                env.FAILED_TEST_LIST = failedTests ?
+                    failedTests.collect { "<li>${it}</li>" }.join("\n") :
+                    "<i>Нет упавших тестов</i>"
+            }
 
-                    <h4>Статистика тестов:</h4>
-                    <ul>
-                        <li>Общее количество тестов: <b>${total}</b></li>
-                        <li>Успешно: <b style="color:green;">${passed}</b></li>
-                        <li>Провалено: <b style="color:red;">${failed}</b></li>
-                        <li>Пропущено: <b style="color:orange;">${skipped}</b></li>
-                    </ul>
+            emailext(
+                subject: "Результаты автотестов для ${env.JOB_NAME} - Сборка #${env.BUILD_NUMBER}",
+                body: """
+                    <!DOCTYPE html>
+                    <html>
+                    <head><meta charset="UTF-8"></head>
+                    <body>
+                        <h3>Результаты тестирования</h3>
 
-                    <h4>Проваленные тесты:</h4>
-                    <ul>${failedTests ?: "<i>Нет упавших тестов</i>"}</ul>
+                        <h4>Статистика тестов:</h4>
+                        <ul>
+                            <li>Общее количество тестов: <b>${env.ALLURE_TESTS_TOTAL}</b></li>
+                            <li>Успешно: <b style="color:green;">${env.ALLURE_TESTS_PASSED}</b></li>
+                            <li>Провалено: <b style="color:red;">${env.ALLURE_TESTS_FAILED}</b></li>
+                            <li>Пропущено: <b style="color:orange;">${env.ALLURE_TESTS_SKIPPED}</b></li>
+                        </ul>
 
-                    <p><a href="${env.BUILD_URL}allure">Отчет Allure</a></p>
-                </body>
-                </html>
-            """,
-            to: "sokol_night@mail.ru",
-            attachmentsPattern: 'allure-report.zip'
-        )
+                        <h4>Проваленные тесты:</h4>
+                        <ul>${env.FAILED_TEST_LIST}</ul>
+
+                        <p><a href="${env.BUILD_URL}allure">Отчет Allure</a></p>
+                    </body>
+                    </html>
+                """,
+                to: "sokol_night@mail.ru",
+                attachmentsPattern: 'allure-report.zip'
+            )
+        }
     }
 }
