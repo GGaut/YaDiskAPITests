@@ -56,6 +56,35 @@ pipeline {
                    jdk: '',
                    reportBuildPolicy: 'ALWAYS',
                    results: [[path: 'allure_results']]
+
+            script {
+                def results = []
+                def failedTests = []
+
+                def files = findFiles(glob: 'allure_results/*.json')
+
+                files.each { file ->
+                    def json = readJSON file: file.path
+
+                    if (json.status) {
+                        results << json.status
+
+                        if (json.status == "failed") {
+                            failedTests << json.name
+                        }
+                    }
+                }
+
+                env.ALLURE_TESTS_TOTAL = results.size().toString()
+                env.ALLURE_TESTS_PASSED = results.count { it == "passed" }.toString()
+                env.ALLURE_TESTS_FAILED = results.count { it == "failed" }.toString()
+                env.ALLURE_TESTS_SKIPPED = results.count { it == "skipped" }.toString()
+
+                env.FAILED_TEST_LIST = failedTests
+                    .collect { "<li>${it}</li>" }
+                    .join("\n")
+            }
+
             sh '''
                 cp /var/jenkins_home/jobs/$JOB_NAME/builds/$BUILD_NUMBER/archive/allure-report.zip \
                 . || echo "Файл не найден"
