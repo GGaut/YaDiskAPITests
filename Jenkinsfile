@@ -71,7 +71,8 @@ pipeline {
             junit 'junit.xml'
 
             script {
-                def testResultAction = manager.build.getAction(hudson.tasks.junit.TestResultAction)
+                def build = currentBuild.getBuild()
+                def testResultAction = build.getAction(hudson.tasks.junit.TestResultAction)
 
                 def total = testResultAction.totalCount
                 def passed = testResultAction.result.passCount
