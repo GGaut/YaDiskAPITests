@@ -85,8 +85,6 @@ pipeline {
                 env.ALLURE_TESTS_PASSED = testResultAction.result.passCount.toString()
                 env.ALLURE_TESTS_FAILED = testResultAction.result.failCount.toString()
                 env.ALLURE_TESTS_SKIPPED = testResultAction.result.skipCount.toString()
-            }
-
 
                 env.FAILED_TEST_LIST = failedTests ?
                     failedTests.collect { "<li>${it}</li>" }.join("\n") :
