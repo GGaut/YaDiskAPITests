@@ -71,7 +71,7 @@ pipeline {
                     </html>
                 """,
                 to: "sokol_night@mail.ru",
-                attachmentsPattern: '/var/jenkins_home/jobs/${env.JOB_NAME}/builds/${BUILD_NUMBER}/archive/allure-report.zip'
+                attachmentsPattern: '../builds/${BUILD_NUMBER}/archive/allure-report.zip'
 
             )
         }
