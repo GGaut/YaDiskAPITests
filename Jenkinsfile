@@ -51,73 +51,74 @@ pipeline {
     }
 
     post {
-    always {
+        always {
 
-        allure includeProperties: false,
-               jdk: '',
-               reportBuildPolicy: 'ALWAYS',
-               results: [[path: 'allure_results']]
+            allure includeProperties: false,
+                jdk: '',
+                reportBuildPolicy: 'ALWAYS',
+                results: [[path: 'allure_results']]
 
-        sh '''
-            allure generate allure_results --clean -o allure-report
-        '''
+            sh '''
+                allure generate allure_results --clean -o allure-report
+            '''
 
-        sh '''
-            cp /var/jenkins_home/jobs/$JOB_NAME/builds/$BUILD_NUMBER/archive/allure-report.zip \
-            . || echo "ZIP не найден"
-        '''
+            sh '''
+                cp /var/jenkins_home/jobs/$JOB_NAME/builds/$BUILD_NUMBER/archive/allure-report.zip \
+                . || echo "ZIP не найден"
+            '''
 
-        script {
-            def summary = readJSON file: "allure-report/widgets/summary.json"
+            script {
+                def summary = readJSON file: "allure-report/widgets/summary.json"
 
-            env.ALLURE_TESTS_TOTAL  = summary.stat.total.toString()
-            env.ALLURE_TESTS_PASSED = summary.stat.passed.toString()
-            env.ALLURE_TESTS_FAILED = summary.stat.failed.toString()
-            env.ALLURE_TESTS_SKIPPED = summary.stat.skipped.toString()
+                env.ALLURE_TESTS_TOTAL  = summary.stat.total.toString()
+                env.ALLURE_TESTS_PASSED = summary.stat.passed.toString()
+                env.ALLURE_TESTS_FAILED = summary.stat.failed.toString()
+                env.ALLURE_TESTS_SKIPPED = summary.stat.skipped.toString()
 
-            def suites = readJSON file: "allure-report/widgets/suites.json"
+                def suites = readJSON file: "allure-report/widgets/suites.json"
 
-            def failedTests = []
+                def failedTests = []
 
-            suites.children.each { suite ->
-                suite.children.each { test ->
-                    if (test.status == "failed") {
-                        failedTests << test.name
+                suites.children.each { suite ->
+                    suite.children.each { test ->
+                        if (test.status == "failed") {
+                            failedTests << test.name
+                        }
                     }
                 }
+
+                env.FAILED_TEST_LIST = failedTests ?
+                    failedTests.collect { "<li>${it}</li>" }.join("\n") :
+                    "<i>Нет упавших тестов</i>"
             }
 
-            env.FAILED_TEST_LIST = failedTests ?
-                failedTests.collect { "<li>${it}</li>" }.join("\n") :
-                "<i>Нет упавших тестов</i>"
+            emailext(
+                subject: "Результаты автотестов для ${env.JOB_NAME} - Сборка #${env.BUILD_NUMBER}",
+                body: """
+                    <!DOCTYPE html>
+                    <html>
+                    <head><meta charset="UTF-8"></head>
+                    <body>
+                        <h3>Результаты тестирования</h3>
+
+                        <h4>Статистика тестов:</h4>
+                        <ul>
+                            <li>Общее количество тестов: <b>${env.ALLURE_TESTS_TOTAL}</b></li>
+                            <li>Успешно: <b style="color:green;">${env.ALLURE_TESTS_PASSED}</b></li>
+                            <li>Провалено: <b style="color:red;">${env.ALLURE_TESTS_FAILED}</b></li>
+                            <li>Пропущено: <b style="color:orange;">${env.ALLURE_TESTS_SKIPPED}</b></li>
+                        </ul>
+
+                        <h4>Проваленные тесты:</h4>
+                        <ul>${env.FAILED_TEST_LIST}</ul>
+
+                        <p><a href="${env.BUILD_URL}allure">Отчет Allure</a></p>
+                    </body>
+                    </html>
+                """,
+                to: "sokol_night@mail.ru",
+                attachmentsPattern: 'allure-report.zip'
+            )
         }
-
-        emailext(
-            subject: "Результаты автотестов для ${env.JOB_NAME} - Сборка #${env.BUILD_NUMBER}",
-            body: """
-                <!DOCTYPE html>
-                <html>
-                <head><meta charset="UTF-8"></head>
-                <body>
-                    <h3>Результаты тестирования</h3>
-
-                    <h4>Статистика тестов:</h4>
-                    <ul>
-                        <li>Общее количество тестов: <b>${env.ALLURE_TESTS_TOTAL}</b></li>
-                        <li>Успешно: <b style="color:green;">${env.ALLURE_TESTS_PASSED}</b></li>
-                        <li>Провалено: <b style="color:red;">${env.ALLURE_TESTS_FAILED}</b></li>
-                        <li>Пропущено: <b style="color:orange;">${env.ALLURE_TESTS_SKIPPED}</b></li>
-                    </ul>
-
-                    <h4>Проваленные тесты:</h4>
-                    <ul>${env.FAILED_TEST_LIST}</ul>
-
-                    <p><a href="${env.BUILD_URL}allure">Отчет Allure</a></p>
-                </body>
-                </html>
-            """,
-            to: "sokol_night@mail.ru",
-            attachmentsPattern: 'allure-report.zip'
-        )
     }
 }
