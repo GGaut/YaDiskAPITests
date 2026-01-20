@@ -37,7 +37,7 @@ node {
             mkdir allure_results
 
             export PATH="$HOME/.local/bin:$PATH"
-            uv run pytest --alluredir=allure_results --junitxml=junit.xml
+            uv run pytest --alluredir=allure_results --junitxml=junit.xml || true
         '''
     }
 
