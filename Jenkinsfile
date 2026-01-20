@@ -6,6 +6,7 @@ pipeline {
         RESOURCE_ENDPOINT = 'resources'
         TRASH_ENDPOINT = 'trash/resources'
         OAUTH_TOKEN = credentials('Ya_disk_token')
+        ALLURE_HOME = tool 'allure'
     }
 
     stages {
@@ -59,10 +60,8 @@ pipeline {
                 results: [[path: 'allure_results']]
 
             sh '''
+                export PATH="$ALLURE_HOME/bin:$PATH"
                 allure generate allure_results --clean -o allure-report
-            '''
-
-            sh '''
                 cp /var/jenkins_home/jobs/$JOB_NAME/builds/$BUILD_NUMBER/archive/allure-report.zip \
                 . || echo "ZIP не найден"
             '''
