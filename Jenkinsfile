@@ -61,7 +61,7 @@ pipeline {
                 mkdir -p temprep tempsum
                 cp /var/jenkins_home/jobs/$JOB_NAME/builds/$BUILD_NUMBER/archive/allure-report.zip \
                 ./temprep/ || echo "Файл не найден"
-                cp /var/jenkins_home/jobs/$JOB_NAME/builds/$BUILD_NUMBER/allure-report\widgets\summary.json \
+                cp /var/jenkins_home/jobs/$JOB_NAME/builds/$BUILD_NUMBER/allure-report/widgets/summary.json \
                 ./tempsum/ || echo "Файл не найден"
             '''
 
