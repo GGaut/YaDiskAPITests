@@ -48,7 +48,7 @@ pipeline {
                     mkdir allure_results
 
                     export PATH="$HOME/.local/bin:$PATH"
-                    uv run pytest --alluredir=allure_results
+                    uv run pytest --alluredir=allure_results --junitxml=junit.xml
                 '''
             }
         }
@@ -64,29 +64,29 @@ pipeline {
 
             sh '''
                 export PATH="$ALLURE_HOME/bin:$PATH"
-                allure generate allure_results --clean -o allure-report
                 cp /var/jenkins_home/jobs/$JOB_NAME/builds/$BUILD_NUMBER/archive/allure-report.zip \
                 . || echo "ZIP не найден"
             '''
 
+            junit 'junit.xml'
+
             script {
-                def summary = readJSON file: "allure-report/widgets/summary.json"
+                def testResultAction = currentBuild.rawBuild.getAction(hudson.tasks.junit.TestResultAction)
 
-                env.ALLURE_TESTS_TOTAL  = summary.statistic.total.toString()
-                env.ALLURE_TESTS_PASSED = summary.statistic.passed.toString()
-                env.ALLURE_TESTS_FAILED = summary.statistic.failed.toString()
-                env.ALLURE_TESTS_SKIPPED = summary.statistic.skipped.toString()
-
-                def failedTests = []
-
-                def testCaseFiles = findFiles(glob: 'allure-report/data/test-cases/*.json')
-
-                testCaseFiles.each { file ->
-                    def test = readJSON file: file.path
-                    if (test.status == "failed" || test.status == "broken") {
-                        failedTests << (test.fullName ?: test.name)
-                    }
+                def failedTests = testResultAction.failedTests.collect { test ->
+                    "FAILED: ${test.fullName}"
                 }
+
+                env.FAILED_TEST_LIST = failedTests ?
+                    failedTests.collect { "<li>${it}</li>" }.join("\n") :
+                    "<i>Нет упавших тестов</i>"
+
+                env.ALLURE_TESTS_TOTAL  = testResultAction.totalCount.toString()
+                env.ALLURE_TESTS_PASSED = testResultAction.result.passCount.toString()
+                env.ALLURE_TESTS_FAILED = testResultAction.result.failCount.toString()
+                env.ALLURE_TESTS_SKIPPED = testResultAction.result.skipCount.toString()
+            }
+
 
                 env.FAILED_TEST_LIST = failedTests ?
                     failedTests.collect { "<li>${it}</li>" }.join("\n") :
