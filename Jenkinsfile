@@ -71,25 +71,16 @@ pipeline {
             junit 'junit.xml'
 
             script {
-                def testResultAction = currentBuild.rawBuild.getAction(hudson.tasks.junit.TestResultAction)
+                def testResultAction = currentBuild.testResultAction
 
-                def failedTests = testResultAction.failedTests.collect { test ->
-                    "FAILED: ${test.fullName}"
-                }
+                def total = testResultAction.totalCount
+                def passed = testResultAction.result.passCount
+                def failed = testResultAction.result.failCount
+                def skipped = testResultAction.result.skipCount
 
-                env.FAILED_TEST_LIST = failedTests ?
-                    failedTests.collect { "<li>${it}</li>" }.join("\n") :
-                    "<i>Нет упавших тестов</i>"
-
-                env.ALLURE_TESTS_TOTAL  = testResultAction.totalCount.toString()
-                env.ALLURE_TESTS_PASSED = testResultAction.result.passCount.toString()
-                env.ALLURE_TESTS_FAILED = testResultAction.result.failCount.toString()
-                env.ALLURE_TESTS_SKIPPED = testResultAction.result.skipCount.toString()
-
-                env.FAILED_TEST_LIST = failedTests ?
-                    failedTests.collect { "<li>${it}</li>" }.join("\n") :
-                    "<i>Нет упавших тестов</i>"
+                def failedTests = testResultAction.failedTests.collect { "FAILED: ${it.fullName}" }
             }
+
 
             emailext(
                 subject: "Результаты автотестов для ${env.JOB_NAME} - Сборка #${env.BUILD_NUMBER}",
@@ -102,14 +93,14 @@ pipeline {
 
                         <h4>Статистика тестов:</h4>
                         <ul>
-                            <li>Общее количество тестов: <b>${env.ALLURE_TESTS_TOTAL}</b></li>
-                            <li>Успешно: <b style="color:green;">${env.ALLURE_TESTS_PASSED}</b></li>
-                            <li>Провалено: <b style="color:red;">${env.ALLURE_TESTS_FAILED}</b></li>
-                            <li>Пропущено: <b style="color:orange;">${env.ALLURE_TESTS_SKIPPED}</b></li>
+                            <li>Общее количество тестов: <b>${total}</b></li>
+                            <li>Успешно: <b style="color:green;">${passed}</b></li>
+                            <li>Провалено: <b style="color:red;">${failed}</b></li>
+                            <li>Пропущено: <b style="color:orange;">${skipped}</b></li>
                         </ul>
 
                         <h4>Проваленные тесты:</h4>
-                        <ul>${env.FAILED_TEST_LIST}</ul>
+                        <ul>${failedTests}</ul>
 
                         <p><a href="${env.BUILD_URL}allure">Отчет Allure</a></p>
                     </body>
