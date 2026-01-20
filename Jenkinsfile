@@ -44,6 +44,9 @@ pipeline {
         stage('Run tests') {
             steps {
                 sh '''
+                    rm -rf allure_results
+                    mkdir allure_results
+
                     export PATH="$HOME/.local/bin:$PATH"
                     uv run pytest --alluredir=allure_results
                 '''
