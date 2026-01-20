@@ -69,20 +69,21 @@ pipeline {
             script {
                 def summary = readJSON file: "allure-report/widgets/summary.json"
 
-                env.ALLURE_TESTS_TOTAL  = summary.stat.total.toString()
-                env.ALLURE_TESTS_PASSED = summary.stat.passed.toString()
-                env.ALLURE_TESTS_FAILED = summary.stat.failed.toString()
-                env.ALLURE_TESTS_SKIPPED = summary.stat.skipped.toString()
+                env.ALLURE_TESTS_TOTAL  = summary.statistic.total.toString()
+                env.ALLURE_TESTS_PASSED = summary.statistic.passed.toString()
+                env.ALLURE_TESTS_FAILED = summary.statistic.failed.toString()
+                env.ALLURE_TESTS_SKIPPED = summary.statistic.skipped.toString()
 
                 def suites = readJSON file: "allure-report/widgets/suites.json"
 
                 def failedTests = []
 
-                suites.children.each { suite ->
-                    suite.children.each { test ->
-                        if (test.status == "failed") {
-                            failedTests << test.name
-                        }
+                def testCaseFiles = findFiles(glob: 'allure-report/data/test-cases/*.json')
+
+                testCaseFiles.each { file ->
+                    def test = readJSON file: file.path
+                    if (test.status == "failed" || test.status == "broken") {
+                        failedTests << (test.fullName ?: test.name)
                     }
                 }
 

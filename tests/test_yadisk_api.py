@@ -13,7 +13,7 @@ class Test_YaDisk_Auth:
     def test_auth_with_valid_token(self, client):
         response = client.get()
 
-        assert response.status_code == 200, (
+        assert response.status_code == 2000, (
             f"Request returns {response.status_code} code, expected 200"
         )
         data = response.json()
