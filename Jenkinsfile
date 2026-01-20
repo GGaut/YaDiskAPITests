@@ -57,7 +57,7 @@ pipeline {
                    reportBuildPolicy: 'ALWAYS',
                    results: [[path: 'allure_results']]
             sh '''
-                cp /var/jenkins_home/jobs/${env.JOB_NAME}/builds/${BUILD_NUMBER}/archive/allure-report.zip \
+                cp /var/jenkins_home/jobs/$JOB_NAME/builds/$BUILD_NUMBER/archive/allure-report.zip \
                 . || echo "Файл не найден"
             '''
 
