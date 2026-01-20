@@ -72,7 +72,7 @@ pipeline {
                 """,
                 to: "sokol_night@mail.ru",
                 mimeType: "text/html",
-                attachmentsPattern: 'builds/${BUILD_NUMBER}/archive/allure-report.zip'
+                attachmentsPattern: '**/allure-report.zip'
             )
         }
     }
