@@ -57,38 +57,25 @@ pipeline {
                    reportBuildPolicy: 'ALWAYS',
                    results: [[path: 'allure_results']]
 
-            script {
-                def results = []
-                def failedTests = []
-
-                def files = findFiles(glob: 'allure_results/*.json')
-
-                files.each { file ->
-                    def json = readJSON file: file.path
-
-                    if (json.status) {
-                        results << json.status
-
-                        if (json.status == "failed") {
-                            failedTests << json.name
-                        }
-                    }
-                }
-
-                env.ALLURE_TESTS_TOTAL = results.size().toString()
-                env.ALLURE_TESTS_PASSED = results.count { it == "passed" }.toString()
-                env.ALLURE_TESTS_FAILED = results.count { it == "failed" }.toString()
-                env.ALLURE_TESTS_SKIPPED = results.count { it == "skipped" }.toString()
-
-                env.FAILED_TEST_LIST = failedTests
-                    .collect { "<li>${it}</li>" }
-                    .join("\n")
-            }
-
             sh '''
+                mkdir -p temprep tempsum
                 cp /var/jenkins_home/jobs/$JOB_NAME/builds/$BUILD_NUMBER/archive/allure-report.zip \
-                . || echo "Файл не найден"
+                ./temprep/ || echo "Файл не найден"
+                cp /var/jenkins_home/jobs/$JOB_NAME/builds/$BUILD_NUMBER/allure-report\widgets\summary.json \
+                ./tempsum/ || echo "Файл не найден"
             '''
+
+            script {
+                def summary = readJSON file: "tempsum/summary.json"
+
+                env.ALLURE_TESTS_TOTAL = summary.stat.total.toString()
+                env.ALLURE_TESTS_PASSED = summary.stat.passed.toString()
+                env.ALLURE_TESTS_FAILED = summary.stat.failed.toString()
+                env.ALLURE_TESTS_SKIPPED = summary.stat.skipped.toString()
+                env.FAILED_TEST_LIST = summary.stat.failed > 0 ?
+                summary.failedTests.collect { "<li>${it.name}</li>" }.join("\n") :
+                "<i>Нет упавших тестов</i>"
+            }
 
             emailext (
                 subject: "Результаты автотестов для ${env.JOB_NAME} - Сборка #${env.BUILD_NUMBER}",
