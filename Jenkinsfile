@@ -70,15 +70,17 @@ pipeline {
 
             junit 'junit.xml'
 
-            script {
-                def testResultAction = currentBuild.testResultAction
+            script script {
+                def testResultAction = manager.build.getAction(hudson.tasks.junit.TestResultAction)
 
                 def total = testResultAction.totalCount
                 def passed = testResultAction.result.passCount
                 def failed = testResultAction.result.failCount
                 def skipped = testResultAction.result.skipCount
 
-                def failedTests = testResultAction.failedTests.collect { "FAILED: ${it.fullName}" }
+                def failedTests = testResultAction.failedTests.collect { t ->
+                    "FAILED: ${t.fullName}"
+                }
             }
 
 
