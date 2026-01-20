@@ -78,7 +78,7 @@ pipeline {
                             <li>Пропущено: <b style="color:orange;">${env.ALLURE_TESTS_SKIPPED}</b></li>
                         </ul>
                         <h4>Проваленные тесты:</h4>
-                        ${FAILED_TESTS}
+                        ${env.FAILED_TEST_LIST}
 
                         <p><a href="${env.BUILD_URL}allure">Отчет Allure</a></p>
                     </body>
