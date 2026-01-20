@@ -68,9 +68,19 @@ pipeline {
                     <html>
                     <head><meta charset="UTF-8"></head>
                     <body>
-                        <p>Автоматический прогон тестов для проекта <b>${env.JOB_NAME}</b> (Сборка #${env.BUILD_NUMBER}) завершился со статусом <b style="color:green;">${currentBuild.result}</b>.</p>
-                        <p><a href="${env.BUILD_URL}allure">Просмотреть отчет Allure</a></p>
-                        <p>Архив с отчетом прикреплен к этому письму.</p>
+                        <h3>Результаты тестирования</h3>
+
+                        <h4>Статистика тестов:</h4>
+                        <ul>
+                            <li>Общее количество тестов: <b>${env.ALLURE_TESTS_TOTAL}</b></li>
+                            <li>Успешно: <b style="color:green;">${env.ALLURE_TESTS_PASSED}</b></li>
+                            <li>Провалено: <b style="color:red;">${env.ALLURE_TESTS_FAILED}</b></li>
+                            <li>Пропущено: <b style="color:orange;">${env.ALLURE_TESTS_SKIPPED}</b></li>
+                        </ul>
+                        <h4>Проваленные тесты:</h4>
+                        ${FAILED_TESTS}
+
+                        <p><a href="${env.BUILD_URL}allure">Отчет Allure</a></p>
                     </body>
                     </html>
                 """,
