@@ -56,6 +56,10 @@ pipeline {
                    jdk: '',
                    reportBuildPolicy: 'ALWAYS',
                    results: [[path: 'allure_results']]
+            sh '''
+                cp /var/jenkins_home/jobs/${env.JOB_NAME}/builds/${BUILD_NUMBER}/archive/allure-report.zip \
+                . || echo "Файл не найден"
+            '''
 
             emailext (
                 subject: "Результаты автотестов для ${env.JOB_NAME} - Сборка #${env.BUILD_NUMBER}",
@@ -71,7 +75,7 @@ pipeline {
                     </html>
                 """,
                 to: "sokol_night@mail.ru",
-                attachmentsPattern: '/var/jenkins_home/jobs/${env.JOB_NAME}/builds/${BUILD_NUMBER}/archive/allure-report.zip'
+                attachmentsPattern: 'allure-report.zip'
             )
         }
     }
