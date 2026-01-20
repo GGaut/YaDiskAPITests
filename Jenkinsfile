@@ -56,16 +56,23 @@ node {
 
     stage('Collect JUnit results') {
         junit 'junit.xml'
+        def xml = readFile 'junit.xml'
+        def root = new XmlSlurper().parseText(xml)
+        def suite = root.name() == 'testsuite' ? root : root.testsuite[0]
 
-        def tr = currentBuild.rawBuild.getAction(hudson.tasks.junit.TestResultAction)
+        total = (suite.@tests as int)
+        failures = (suite.@failures as int)
+        errors = (suite.@errors as int)
+        skipped = (suite.@skipped as int)
+        failed = failures + errors
+        passed = total - failed - skipped
 
-        total   = tr.totalCount
-        passed  = tr.result.passCount
-        failed  = tr.result.failCount
-        skipped = tr.result.skipCount
-
-        failedTests = tr.failedTests.collect { t ->
-            "<li>FAILED: ${t.fullName}</li>"
+        failedTests = suite.testcase.findAll { tc ->
+        tc.failure || tc.error
+        }.collect { tc ->
+        def cls = tc.@classname.toString()
+        def name = tc.@name.toString()
+        "<li>FAILED: ${cls}.${name}</li>"
         }.join("\n")
     }
 
