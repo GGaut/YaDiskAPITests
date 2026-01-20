@@ -77,8 +77,6 @@ pipeline {
                 env.ALLURE_TESTS_FAILED = summary.statistic.failed.toString()
                 env.ALLURE_TESTS_SKIPPED = summary.statistic.skipped.toString()
 
-                def suites = readJSON file: "allure-report/widgets/suites.json"
-
                 def failedTests = []
 
                 def testCaseFiles = findFiles(glob: 'allure-report/data/test-cases/*.json')
