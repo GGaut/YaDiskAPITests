@@ -70,7 +70,7 @@ pipeline {
 
             junit 'junit.xml'
 
-            script script {
+            script {
                 def testResultAction = manager.build.getAction(hudson.tasks.junit.TestResultAction)
 
                 def total = testResultAction.totalCount
