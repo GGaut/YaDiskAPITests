@@ -68,18 +68,15 @@ pipeline {
                 . || echo "ZIP не найден"
             '''
 
-            junit 'junit.xml'
-
             script {
-                def build = currentBuild.getBuild()
-                def testResultAction = build.getAction(hudson.tasks.junit.TestResultAction)
+                def tr = junit testResults: 'junit.xml', returnTestResults: true
 
-                def total = testResultAction.totalCount
-                def passed = testResultAction.result.passCount
-                def failed = testResultAction.result.failCount
-                def skipped = testResultAction.result.skipCount
+                def total = tr.totalCount
+                def passed = tr.result.passCount
+                def failed = tr.result.failCount
+                def skipped = tr.result.skipCount
 
-                def failedTests = testResultAction.failedTests.collect { t ->
+                def failedTests = tr.failedTests.collect { t ->
                     "FAILED: ${t.fullName}"
                 }
             }
