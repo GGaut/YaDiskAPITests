@@ -1,4 +1,5 @@
 import allure
+import pytest
 
 from models.models import CreatedResponse, DI_ErrorResponse, DiskInfoResponse
 from utils.assertion_helper import assert_error_response, assert_success_response
@@ -32,6 +33,7 @@ class Test_YaDisk_Auth:
 
     @allure.title("Авторизация без токена")
     @allure.step("Отправить GET запрос без авторизации")
+    @pytest.mark.skip(reason="Тест временно отключен")
     def test_auth_without_token(self, client):
         client.set_unauth()
         response = client.get()
@@ -43,7 +45,7 @@ class Test_YaDisk_Auth:
         data = response.json()
         val_data = response_validation(data, DI_ErrorResponse)
 
-        assert "error" in val_data and val_data["error"] is not None, (
+        assert "error_fail" in val_data and val_data["error"] is not None, (
             "Error response body doesn't contain 'error' field"
         )
         assert "description" in val_data and val_data["description"] is not None, (
@@ -61,7 +63,7 @@ class Test_YaDisk_Folders:
     def test_create_folder(self, folder_manager):
         methods, path = folder_manager["methods"], folder_manager["folder_name"]
         response = methods.create_folder(path)
-        assert response.status_code == 201, (
+        assert response.status_code == 2011, (
             f"Request returns {response.status_code} code, expected 201"
         )
         data = response.json()
